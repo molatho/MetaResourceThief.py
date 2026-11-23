@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resourcehacker"
+version = "0.1.0"
+description = "Resource Hacker-compatible PE resource editor, plus the shared PE library"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["pe_tools>=0.3.11"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pefile>=2021.9.3"]
+
+[project.scripts]
+ResourceHacker = "resourcehacker.cli:main"
+
+[tool.setuptools]
+packages = ["resourcehacker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

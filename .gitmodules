@@ -1,0 +1,3 @@
+[submodule "sigthief"]
+	path = sigthief
+	url = https://github.com/secretsquirrel/SigThief
