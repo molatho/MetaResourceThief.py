@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sigthief"
+version = "0.1.0"
+description = "Steal signatures and make one invalid signature at a time"
+readme = "sigthief/README.md"
+requires-python = ">=3.9"
+license = { text = "BSD-3-Clause" }
+
+[project.urls]
+Homepage = "https://github.com/secretsquirrel/SigThief"
+
+[tool.setuptools]
+py-modules = ["sigthief"]
+package-dir = {"" = "sigthief"}
+license-files = ["sigthief/LICENSE"]

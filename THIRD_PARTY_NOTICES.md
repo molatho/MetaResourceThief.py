@@ -36,9 +36,11 @@ SOFTWARE.
 
 ## SigThief
 
-`sigthief/` is the upstream [SigThief](https://github.com/secretsquirrel/SigThief)
-repository, included as a git submodule. It is redistributed as source (the
-submodule), inside the Docker image, and as `dist/SigThief.exe`, so its licence
+`packaging/sigthief/` is the upstream
+[SigThief](https://github.com/secretsquirrel/SigThief) repository, included as
+a git submodule and built into the `sigthief` distribution by
+`packaging/pyproject.toml`. It is redistributed as source (the submodule and
+wheels), inside the Docker image, and as `dist/SigThief.exe`, so its licence
 travels with those artefacts:
 
 ```text

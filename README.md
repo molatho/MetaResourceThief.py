@@ -1,7 +1,7 @@
 # MetaResourceThief.py
 
-Python bundle (built to command-line tools) of `metatwin` (reimplementation of [metatwin](https://github.com/threatexpress/metatwin)), `ResourceHacker` (reimplementations of
-[Resource Hacker](https://www.angusj.com/resourcehacker/)), and `SigThief` (included as submodule [SigThief](https://github.com/secretsquirrel/SigThief)).
+Python bundle (built to command-line tools) of `metatwin` (reimplementation of [metatwin](https://github.com/threatexpress/metatwin)), `ResourceHacker` (reimplementation of
+[Resource Hacker](https://www.angusj.com/resourcehacker/)), and `SigThief` (included as submodule [SigThief](https://github.com/secretsquirrel/SigThief)) — plus `MetaResourceThief`, one command that composes the three.
 
 > /!\ This project is 100% vibe-coded. While I would like to take credit for anything, I honestly can't. It's merely a convenience project that allows the metatwin/ResourceHacker/SigThief stack to run on Linux (without the need for Wine).
 
@@ -9,14 +9,14 @@ Python bundle (built to command-line tools) of `metatwin` (reimplementation of [
   switches as the original, so an existing script needs only its binary path
   changed.
 - **Runs where the originals can't.** Pure Python with one runtime dependency
-  (`pe_tools`); both packages install on Linux, and the Docker image needs
+  (`pe_tools`); the packages install on Linux, and the Docker image needs
   neither Wine nor a Windows host.
 - **Leaves the image intact.** After a resource merge every non-`.rsrc` section
   is byte-identical to the input, the entry point and import count are
   unchanged, and the PE checksum is recomputed.
 - **One shared library.** The `.res` codec, resource tree and merge logic live
-  in `resourcehacker/`; `metatwin` imports them.
-- **46 tests** across the two packages, plus an oracle comparison against the
+  in `resourcehacker/`; `metatwin` and `MetaResourceThief` import them.
+- **52 tests** across the three packages, plus an oracle comparison against the
   real Resource Hacker 5.1.8.360.
 
 ```console
@@ -50,21 +50,22 @@ $ metatwin -s C:\Windows\explorer.exe -t C:\Windows\System32\where.exe -o out --
 
 ## Install
 
-Two local distributions, plus the SigThief submodule:
+Three local distributions plus the `packaging` project that turns the SigThief
+submodule into an installable `sigthief` distribution:
 
 ```console
 $ git submodule update --init --recursive
-$ pip install -e ./resourcehacker -e ./metatwin
+$ pip install ./packaging -e ./resourcehacker -e ./metatwin -e ./metaresourcethief
 ```
 
-`pip` pulls `pe_tools`, the only runtime dependency. Python 3.9+. On Windows
-each console script becomes an `.exe` in the environment's `Scripts` directory —
-`ResourceHacker.exe` and `metatwin.exe`.
+`pip` pulls `pe_tools`; `metatwin` and `MetaResourceThief` declare `sigthief` as
+a normal dependency, resolved from `./packaging` in the same command. Python
+3.9+. On Windows each console script becomes an `.exe` in the environment's
+`Scripts` directory — `ResourceHacker.exe`, `metatwin.exe`,
+`MetaResourceThief.exe`.
 
-SigThief is not installed: it runs straight from the submodule as
-`python sigthief/sigthief.py` (see [below](#sigthief)), and `metatwin --sign`
-calls that script. So `--sign` needs the submodule — or `--sigthief PATH` /
-`$SIGTHIEF` pointing at a copy — while the resource clone works without it.
+SigThief itself stays available as a CLI: `python packaging/sigthief/sigthief.py`
+(see [below](#sigthief)).
 
 ### Standalone executables
 
@@ -73,20 +74,19 @@ Single-file executables via PyInstaller, no Python needed on the target:
 ```console
 $ pip install pyinstaller
 $ python scripts/build_exes.py
-[+] built: ResourceHacker.exe, SigThief.exe, metatwin.exe
+[+] built: MetaResourceThief.exe, ResourceHacker.exe, SigThief.exe, metatwin.exe
 ```
 
-The three land in `dist/` (with `.exe` on Windows); `SigThief.exe` is built from
-the submodule's script. `metatwin.exe` lives outside the checkout, so its
-`--sign` needs `--sigthief path\to\sigthief.py`. The build also copies
-`THIRD_PARTY_NOTICES.md` and SigThief's `LICENSE` into `dist/`.
+The four land in `dist/` (with `.exe` on Windows); `SigThief.exe` is built from
+the submodule's script. The build also copies `THIRD_PARTY_NOTICES.md` and
+SigThief's `LICENSE` into `dist/`.
 
 ### Docker
 
-The image installs both packages and exposes upstream SigThief as `SigThief`;
-`ResourceHacker` is the default entry point, so the container takes Resource
-Hacker's switches directly. Third-party licence texts are in the image under
-`/app/NOTICES`.
+The image installs all three packages (plus the `sigthief` distribution) and
+exposes upstream SigThief as `SigThief`; `ResourceHacker` is the default entry
+point, so the container takes Resource Hacker's switches directly. Third-party
+licence texts are in the image under `/app/NOTICES`.
 
 ```console
 $ docker build -t resourcehacker .
@@ -101,15 +101,24 @@ $ docker run --rm -v "${PWD}:/work" -w /work --entrypoint SigThief resourcehacke
     -i source.exe -t target.exe -o signed.exe
 ```
 
+or:
+
+```console
+$ docker run --rm -v "${PWD}:/work" -w /work --entrypoint MetaResourceThief resourcehacker \
+    -s source.exe -t target.exe -o out.exe --sign
+```
+
 ## The tools
 
 ```
-resourcehacker/    ResourceHacker CLI + the shared PE library
+resourcehacker/     ResourceHacker CLI + the shared PE library
 ├── resourcehacker/    .res codec, resource tree, merge logic
 ├── tests/
 └── scripts/oracle_compare.py
-metatwin/          metatwin CLI (imports resourcehacker)
-sigthief/          upstream SigThief, pinned as a git submodule
+metatwin/           metatwin CLI (imports resourcehacker + sigthief)
+metaresourcethief/  MetaResourceThief CLI (imports resourcehacker + metatwin)
+packaging/          builds the sigthief distribution
+└── sigthief/          upstream SigThief, pinned as a git submodule
 ```
 
 ### ResourceHacker
@@ -131,12 +140,15 @@ Resource Hacker's own failure code) otherwise.
 
 ### SigThief
 
-The original tool, vendored rather than ported: `sigthief/` is a git submodule
-pinned to [secretsquirrel/SigThief](https://github.com/secretsquirrel/SigThief).
-The script is dependency-free Python, so it runs on Linux and Windows as-is:
+The original tool, vendored rather than ported: `packaging/sigthief/` is a git
+submodule pinned to
+[secretsquirrel/SigThief](https://github.com/secretsquirrel/SigThief), and
+`packaging/pyproject.toml` builds it into the `sigthief` distribution that
+`metatwin` and `MetaResourceThief` depend on. The script is dependency-free
+Python, so it runs on Linux and Windows as-is:
 
 ```console
-$ python sigthief/sigthief.py -i source.exe -t target.exe -o signed.exe
+$ python packaging/sigthief/sigthief.py -i source.exe -t target.exe -o signed.exe
 Output file: signed.exe
 Signature appended.
 FIN.
@@ -145,7 +157,7 @@ FIN.
 All of the original's modes are available — `-r` rip to disk, `-s`/`-a` add from
 a signature file, `-c` check, `-T` truncate. The Docker image and
 `dist/SigThief.exe` invoke this same script under the original's name, and
-`metatwin --sign` loads it to do the certificate copy.
+`metatwin --sign` imports it to do the certificate copy.
 
 The appended bytes are a valid certificate table and Windows parses them, but
 the `SignedData` covers the source image's digest, so verification fails on
@@ -162,14 +174,35 @@ The whole pipeline in one command, mirroring `Invoke-MetaTwin`:
 1. extract every resource of the source into a `.res`,
 2. install it into the target with `replace` semantics — nothing of the target's
    own resources survives,
-3. optionally copy the source's certificate table with SigThief (`--sign`;
-   it finds `sigthief/sigthief.py`, or takes `--sigthief`/`$SIGTHIEF`),
+3. optionally copy the source's certificate table with SigThief (`--sign`),
 4. timestomp the output to the source's access and modification times
    (creation time too, on Windows),
 5. print the resulting version info.
 
 Each run creates `outdir/<YYYYMMDD_HHMMSS>/` holding the `.res`, the unsigned
 `*_twin.exe` and, with `--sign`, the `*_signed_*` output.
+
+### MetaResourceThief
+
+One command that composes the other two steps, with each half optional:
+
+```console
+$ MetaResourceThief -s source.exe -t target.exe -o out.exe --sign
+[*] copied 207 resources from source.exe -> out.exe
+[*] copied signature (77680 bytes) from source.exe -> out.exe
+[+] output: out.exe
+```
+
+| Flags | Result |
+|---|---|
+| `-s src -t tgt -o out --sign` | resources + signature |
+| `-s src -t tgt -o out` | resources only |
+| `-s src -t tgt -o out --sign --no-metadata` | signature only |
+
+Resources are installed by `resourcehacker.pelayer.copy_resources` and the
+signature by `metatwin.signature.copy_signature`; the wrapper adds no copying
+logic of its own. Unlike `metatwin` it does not timestomp or print version info,
+and `--output` must differ from `--source` and `--target`.
 
 ## `replace` vs `addoverwrite`
 
@@ -256,9 +289,10 @@ semantic check fails.
 ## Development
 
 ```console
-$ pip install -e ./resourcehacker[dev] -e ./metatwin[dev]
-$ cd resourcehacker && python -m pytest    # 42 passed
-$ cd ../metatwin    && python -m pytest    #  4 passed
+$ pip install ./packaging -e ./resourcehacker[dev] -e ./metatwin[dev] -e ./metaresourcethief[dev]
+$ cd resourcehacker && python -m pytest        # 42 passed
+$ cd ../metatwin    && python -m pytest        #  3 passed
+$ cd ../metaresourcethief && python -m pytest  #  7 passed
 ```
 
 Run each suite from inside its own directory so imports resolve to the package
@@ -287,8 +321,9 @@ texts, and precisely what triggers each, are in
   next to the executables in `dist/`.
 - [SigThief](https://github.com/secretsquirrel/SigThief) by Josh Pitts
   ([@midnite_runr](https://twitter.com/midnite_runr)) — vendored as a git
-  submodule and redistributed as source, in the Docker image and as
-  `dist/SigThief.exe` under BSD-3-Clause, Copyright (c) 2017 Josh Pitts. See
-  [sigthief/LICENSE](sigthief/LICENSE).
+  submodule under `packaging/` and redistributed as source, as the `sigthief`
+  distribution, in the Docker image and as `dist/SigThief.exe` under
+  BSD-3-Clause, Copyright (c) 2017 Josh Pitts. See
+  [packaging/sigthief/LICENSE](packaging/sigthief/LICENSE).
 - [pe_tools](https://github.com/avast/pe_tools) by Avast — runtime dependency,
   not vendored; used for PE parsing and resource serialisation.

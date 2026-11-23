@@ -22,7 +22,7 @@ from pe_tools import parse_pe
 from pe_tools.pe_parser import IMAGE_DIRECTORY_ENTRY_RESOURCE
 from pe_tools.rsrc import pe_resources_prepack
 
-from .resfile import ResourceEntry
+from .resfile import ResourceEntry, write_file
 
 #: How a merge treats an entry that already exists in the target.
 OVERWRITE = "addoverwrite"
@@ -276,3 +276,25 @@ def read_entries(path: str) -> List[ResourceEntry]:
     """Read the resource tree of a PE file without keeping it open."""
     with PEImage(path) as image:
         return image.entries()
+
+
+def copy_resources(
+    source: str, target: str, output: str, resfile: Optional[str] = None
+) -> int:
+    """Install every resource of ``source`` into ``target``, writing ``output``.
+
+    The target's own resource tree is discarded (``REPLACE`` semantics), which
+    is what cloning wants.  If ``resfile`` is given, the extracted resources are
+    also written there.  Returns the number of resources copied.
+    """
+    with PEImage(source) as image:
+        entries = image.entries()
+    if not entries:
+        raise PEError(f"{source} has no resources to copy")
+    if resfile is not None:
+        write_file(resfile, entries)
+    with PEImage(target) as image:
+        image.prepare_for_edit()
+        image.merge(entries, REPLACE)
+        image.save(output)
+    return len(entries)

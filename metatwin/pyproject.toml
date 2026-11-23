@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Clone a source PE's resources, signature and timestamps onto a target"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-dependencies = ["resourcehacker"]
+dependencies = ["resourcehacker", "sigthief"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "pefile>=2021.9.3"]

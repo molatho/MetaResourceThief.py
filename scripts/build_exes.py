@@ -3,11 +3,11 @@
 
     python scripts/build_exes.py
 
-Outputs landing in ``dist/``: ``ResourceHacker`` and ``metatwin`` (with ``.exe``
-on Windows), plus ``SigThief``, built from the upstream script in the
-``sigthief`` submodule. The third-party notices are copied alongside them.
-Requires ``pip install pyinstaller`` and an initialised submodule
-(``git submodule update --init``).
+Outputs landing in ``dist/``: ``ResourceHacker``, ``metatwin`` and
+``MetaResourceThief`` (with ``.exe`` on Windows), plus ``SigThief``, built from
+the upstream script in the ``packaging/sigthief`` submodule. The third-party
+notices are copied alongside them. Requires ``pip install pyinstaller`` and an
+initialised submodule (``git submodule update --init``).
 """
 
 from __future__ import annotations
@@ -21,16 +21,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 #: Tools implemented by packages in this repository: (name, module, hidden imports).
-#: metatwin loads sigthief.py at run time, so PyInstaller cannot see the modules
-#: that script imports on its own.
 TOOLS = [
     ("ResourceHacker", "resourcehacker.cli", ()),
-    ("metatwin", "metatwin.cli", ("optparse",)),
+    ("metatwin", "metatwin.cli", ()),
+    ("MetaResourceThief", "metaresourcethief.cli", ()),
 ]
 
 #: Upstream tools vendored as git submodules: (name, script path).
 SUBMODULE_TOOLS = [
-    ("SigThief", ROOT / "sigthief" / "sigthief.py"),
+    ("SigThief", ROOT / "packaging" / "sigthief" / "sigthief.py"),
 ]
 
 
@@ -90,7 +89,9 @@ def main() -> int:
 
     # PyInstaller cannot follow setuptools' editable-install finders, so point
     # it at the source trees explicitly.
-    search_paths = [ROOT / name for name in ("resourcehacker", "metatwin")]
+    search_paths = [
+        ROOT / name for name in ("resourcehacker", "metatwin", "metaresourcethief")
+    ]
 
     with tempfile.TemporaryDirectory() as tmp:
         for name, module, hidden_imports in TOOLS:
@@ -116,7 +117,7 @@ def main() -> int:
 
     for notice, target in (
         (ROOT / "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
-        (ROOT / "sigthief" / "LICENSE", "SigThief-LICENSE"),
+        (ROOT / "packaging" / "sigthief" / "LICENSE", "SigThief-LICENSE"),
     ):
         if notice.is_file():
             shutil.copy2(notice, dist / target)

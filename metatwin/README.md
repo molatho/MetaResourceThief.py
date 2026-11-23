@@ -12,13 +12,16 @@ source's Authenticode certificate table with SigThief, timestomp the output to
 the source's timestamps, and print the resulting version info.
 
 Runs on Linux and Windows; needs neither PowerShell nor a compiled
-`sigthief.exe`. The signature step is upstream SigThief, so `--sign` needs the
-`sigthief` submodule (`git submodule update --init`) or an explicit
-`--sigthief path/to/sigthief.py` (`$SIGTHIEF` works too). Without `--sign` the
-submodule is not needed.
+`sigthief.exe`. The signature step imports the `sigthief` distribution, built
+from the repository's `packaging/` project.
 
-Depends on the `resourcehacker` distribution. Install both from the repository
-root.
+Depends on the `resourcehacker` and `sigthief` distributions. Install them from
+the repository root, together with `packaging`:
+
+```console
+$ git submodule update --init --recursive
+$ pip install ./packaging -e ./resourcehacker -e ./metatwin
+```
 
 `metatwin/` is a port of [metatwin](https://github.com/threatexpress/metatwin)
 by Threat Express and carries its MIT licence; the notice is in

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metaresourcethief"
+version = "0.1.0"
+description = "Copy a PE's resources and/or Authenticode signature in one command"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["resourcehacker", "metatwin"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+MetaResourceThief = "metaresourcethief.cli:main"
+
+[tool.setuptools]
+packages = ["metaresourcethief"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
