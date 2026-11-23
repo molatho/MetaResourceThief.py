@@ -46,7 +46,7 @@ $ metatwin -s C:\Windows\explorer.exe -t C:\Windows\System32\where.exe -o out --
 - [Verified against Resource Hacker 5.1.8.360](#verified-against-resource-hacker-518360)
 - [Deliberate differences](#deliberate-differences)
 - [Development](#development)
-- [Credits](#credits)
+- [Credits and licences](#credits-and-licences)
 
 ## Install
 
@@ -78,13 +78,15 @@ $ python scripts/build_exes.py
 
 The three land in `dist/` (with `.exe` on Windows); `SigThief.exe` is built from
 the submodule's script. `metatwin.exe` lives outside the checkout, so its
-`--sign` needs `--sigthief path\to\sigthief.py`.
+`--sign` needs `--sigthief path\to\sigthief.py`. The build also copies
+`THIRD_PARTY_NOTICES.md` and SigThief's `LICENSE` into `dist/`.
 
 ### Docker
 
 The image installs both packages and exposes upstream SigThief as `SigThief`;
 `ResourceHacker` is the default entry point, so the container takes Resource
-Hacker's switches directly:
+Hacker's switches directly. Third-party licence texts are in the image under
+`/app/NOTICES`.
 
 ```console
 $ docker build -t resourcehacker .
@@ -267,20 +269,26 @@ The `Makefile` wraps these: `make submodules`, `make install`, `make test`,
 `make build` (PyInstaller executables) and `make docker`, for systems that have
 `make`.
 
-## Credits
+## Credits and licences
 
-This repository is an independent reimplementation of the two tools it ports;
-the original projects keep their own licences.
+This project is MIT-licensed (see [LICENSE](LICENSE)). Third-party licence
+texts, and precisely what triggers each, are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 - [Resource Hacker](https://www.angusj.com/resourcehacker/) by Angus Johnson —
-  the CLI switches, `-mask` grammar, log-file shape and the
-  `addoverwrite`/`replace` split all follow 5.1.8.360.
+  behavioural reference only. Resource Hacker is proprietary freeware: its CLI
+  switches, `-mask` grammar and log format are reproduced for compatibility,
+  but no code is copied or distributed here. 5.1.8.360 is the version followed.
+- [metatwin](https://github.com/threatexpress/metatwin) by Threat Express
+  ([Joe Vest](https://twitter.com/joevest)) — `metatwin/` is a port of
+  `metatwin.ps1` and therefore a derivative work under the original's MIT
+  licence, Copyright (c) 2024 Threat Express. The notice ships in this
+  repository, in the `metatwin` package (`NOTICE`), in the Docker image and
+  next to the executables in `dist/`.
 - [SigThief](https://github.com/secretsquirrel/SigThief) by Josh Pitts
   ([@midnite_runr](https://twitter.com/midnite_runr)) — vendored as a git
-  submodule and used as-is (BSD-3-Clause, see `sigthief/LICENSE`).
-- [metatwin](https://github.com/threatexpress/metatwin) by Joe Vest
-  ([@joevest](https://twitter.com/joevest)) — the pipeline this port follows.
-- [pe_tools](https://github.com/avast/pe_tools) by Avast — PE parsing and
-  resource serialisation underneath.
-
-Licensed under the MIT licence.
+  submodule and redistributed as source, in the Docker image and as
+  `dist/SigThief.exe` under BSD-3-Clause, Copyright (c) 2017 Josh Pitts. See
+  [sigthief/LICENSE](sigthief/LICENSE).
+- [pe_tools](https://github.com/avast/pe_tools) by Avast — runtime dependency,
+  not vendored; used for PE parsing and resource serialisation.

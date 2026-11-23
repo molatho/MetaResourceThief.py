@@ -19,3 +19,8 @@ submodule is not needed.
 
 Depends on the `resourcehacker` distribution. Install both from the repository
 root.
+
+`metatwin/` is a port of [metatwin](https://github.com/threatexpress/metatwin)
+by Threat Express and carries its MIT licence; the notice is in
+[`metatwin/NOTICE`](metatwin/NOTICE) and in the repository's
+[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).

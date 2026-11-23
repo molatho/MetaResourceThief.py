@@ -11,6 +11,8 @@ WORKDIR /app
 COPY resourcehacker ./resourcehacker
 COPY metatwin ./metatwin
 COPY sigthief ./sigthief
+COPY THIRD_PARTY_NOTICES.md /app/NOTICES/
+COPY sigthief/LICENSE /app/NOTICES/SigThief-LICENSE
 
 RUN pip install --no-cache-dir ./resourcehacker ./metatwin \
     && printf '#!/bin/sh\nexec python /app/sigthief/sigthief.py "$@"\n' > /usr/local/bin/SigThief \

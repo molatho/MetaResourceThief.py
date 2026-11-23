@@ -19,5 +19,8 @@ metatwin = "metatwin.cli:main"
 [tool.setuptools]
 packages = ["metatwin"]
 
+[tool.setuptools.package-data]
+metatwin = ["NOTICE"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

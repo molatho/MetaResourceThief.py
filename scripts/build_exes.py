@@ -5,12 +5,14 @@
 
 Outputs landing in ``dist/``: ``ResourceHacker`` and ``metatwin`` (with ``.exe``
 on Windows), plus ``SigThief``, built from the upstream script in the
-``sigthief`` submodule. Requires ``pip install pyinstaller`` and an initialised
-submodule (``git submodule update --init``).
+``sigthief`` submodule. The third-party notices are copied alongside them.
+Requires ``pip install pyinstaller`` and an initialised submodule
+(``git submodule update --init``).
 """
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -112,7 +114,19 @@ def main() -> int:
                 print(f"error: PyInstaller failed for {name}", file=sys.stderr)
                 return result
 
-    built = sorted(path.name for path in dist.iterdir() if path.is_file())
+    for notice, target in (
+        (ROOT / "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
+        (ROOT / "sigthief" / "LICENSE", "SigThief-LICENSE"),
+    ):
+        if notice.is_file():
+            shutil.copy2(notice, dist / target)
+
+    expected = {name for name, *_ in TOOLS} | {name for name, _ in SUBMODULE_TOOLS}
+    built = sorted(
+        path.name
+        for path in dist.iterdir()
+        if path.is_file() and path.stem in expected
+    )
     print(f"[+] built: {', '.join(built)}")
     return 0
 
